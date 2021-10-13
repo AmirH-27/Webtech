@@ -49,7 +49,7 @@
 			header("Location: Welcome.php?name=". $_GET['usrName']);
 		}
 		else{
-
+			echo "<br>Login Failed";
 		}
 	?>
 
