@@ -37,21 +37,21 @@
 			</form>
 
 	<?php
-		$flag = false;
 		if($_SERVER['REQUEST_METHOD'] === "GET" and count($_REQUEST) > 0){
+			$flag = false;
 			for($k=0; $k<count($arr1); $k++){
 				if($_GET['usrName'] === $arr1[$k]->usrName and $_GET['password'] === $arr1[$k]->password){
 					$flag = true;
 				}
 			}
-		}
-		if($flag){
-			header("Location: Welcome.php?name=". $_GET['usrName']);
-		}
-		else{
-
+		
+			if($flag){
+				header("Location: Welcome.php?name=". $_GET['usrName']);
+			}
+			else{
+				echo "<br>Login Failed";
+			}
 		}
 	?>
-
 </body>
 </html>
