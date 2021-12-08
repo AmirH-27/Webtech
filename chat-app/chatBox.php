@@ -41,16 +41,14 @@ textarea {
 </style>
 </head>
 <body>
-<form name = "regForm" action="<?php echo htmlentities($_SERVER['PHP_SELF']);?>" method="POST">
+<form name = "jsForm" action="insertMessage.php" method="POST">
 <h2>Chat Messages</h2>
 <?php
     $servername = "localhost";
     $username = "root";
     $password = "";
     $dbname = "chatapp";
-
     $connection = new mysqli($servername, $username, $password, $dbname);
-
     if ($connection->connect_error) {
       die("Connection failed: " . $connection->connect_error);
     }
@@ -69,7 +67,7 @@ textarea {
         }
       }
       else {
-        echo "No records found.";
+
       }
     }
     $servername = "localhost";
@@ -93,19 +91,14 @@ textarea {
       if ($data->num_rows > 0) {
         while ($row = $data->fetch_assoc()) {
             if($row['sentTo'] === $sentTo){
-                    $output .= "<div class = "."outgoing"."
-                                    <p>". $row['message'] ."</p>
-                                </d>";
+                $output .= "<p class = "."outgoing >". $row['message'] ."</p>";
                                 
-                }else{
-                    $output .= "<div class = "."incoming"."
-                                    <p>". $row['message'] ."</p>
-                                </d>";
-                                //$outputinco = $row['message'];
-                }
+            }
+            else{
+                $output .= "<p class = "."incoming >". $row['message'] ."</p>";
+            }
         }
       }
-      
       else {
         echo "No records found.";
       } 
@@ -114,65 +107,72 @@ textarea {
 ?>
 
 <div id = "chatbox" class="container">
-  <?php echo $output ?>
-  <textarea name="message" rows="4" cols="50"></textarea>
-  <button type = "button" onlick = "dbInsert">Send</button>
+  
+  <div id = "allMessage">
+    <?php echo $output ?>
+</div>
+  <textarea id = "message" name="message" rows="4" cols="50"></textarea>
+  <button type="button" name="Send" onclick="sendData();">Send-></button>
 </div>
 </form>
 <script>
-  function dbInsert(){
-    window.location.reload();
-  <?php
-    $servername = "localhost";
-    $username = "root";
-    $password = "";
-    $dbname = "chatapp";
+  function sendData(){
 
-    $connection = new mysqli($servername, $username, $password, $dbname);
+    const xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function(){
 
-    if ($connection->connect_error) {
-      die("Connection failed: " . $connection->connect_error);
-    }
-    $sql = "SELECT * FROM user";
-    $stmt = $connection->prepare($sql);
-    $response = $stmt->execute();
-
-    if ($response) {
-      $data = $stmt->get_result();
-
-      if ($data->num_rows > 0) {
-        while ($row = $data->fetch_assoc()) {
-          if($row['username'] != $_SESSION['usrName']){
-             $sentTo = $row['username'];
-          }
-        }
-      }
-      else {
-        echo "No records found.";
-      }
-    }
-
-    $connection->close();
-      $temp = $_SESSION['usrName'];
-      if(empty($_POST['message'])){
-        echo "Message Box empty";
-      } 
-      else{
-        $message = $_POST['message'];
-        $connection = new mysqli($servername, $username, $password, $dbname);
-        if ($connection->connect_error) {
-          die("Connection failed: " . $connection->connect_error);
-        }
-        else {
-          echo "Database Connection Successful <br>";
-        }
-        $sql = "INSERT INTO messages(sentTo, form, message) VALUES ('$sentTo', '$temp', '$message')";
-
-        $data = $connection->query($sql);
-        $connection->close();
-      }
-    ?>
+    if(this.readyState === 4 && this.status === 200){
+      var node = "<p>"+this.responseText+"</p>";
+      var p = document.createElement("p");
+      var t = document.createTextNode(this.responseText);
+      p.appendChild(t);
+      p.className = "outgoing";
+        document.getElementById("allMessage").appendChild(p);
+    } 
   }
+    xhttp.open("POST", "insertMessage.php" );
+    xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+    const myData = {
+        "message" : document.getElementById("message").value
+      }
+    xhttp.send("msg="+JSON.stringify(myData));
+
+    document.getElementById("message").value = "";
+  }
+
+  function checkIncomingMessage(){
+      var x = document.getElementsByClassName("incoming").length;
+      const xhttp = new XMLHttpRequest();
+      xhttp.onreadystatechange = function(){
+
+        if(this.readyState === 4 && this.status === 200){
+        
+          try{
+              var temp = JSON.parse(this.responseText);
+              var message = temp.messages;
+              message.forEach(function newMessage(item, index){
+              var node = "<p>"+this.responseText+"</p>";
+              var p = document.createElement("p");
+              var t = document.createTextNode(item);
+              p.appendChild(t);
+              p.className = "incoming";
+              document.getElementById("allMessage").appendChild(p);
+            }); 
+          }
+          catch(err){
+
+          }
+          console.log(message);
+        } 
+      }
+      xhttp.open("POST", "RealTimeChat.php" );
+      xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+      const myData = {
+          "count" : x
+      }
+      xhttp.send("count="+JSON.stringify(myData));
+    }
+    var interval = setInterval(checkIncomingMessage, 700);
 </script>
 </body>
 </html>
