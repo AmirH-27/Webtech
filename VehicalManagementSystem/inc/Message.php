@@ -1,1 +1,0 @@
-<center><h1>Message sent successfully </h1></center>
